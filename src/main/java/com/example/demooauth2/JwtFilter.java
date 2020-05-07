@@ -20,12 +20,19 @@ public class JwtFilter implements javax.servlet.Filter {
         String header = httpServletRequest.getHeader("authorization");
 
         // to Bearer ze spacją jest jakimś przedrostkiem do tokenów
-        if(httpServletRequest == null || header.startsWith("Bearer ")){
-            throw new ServerException("Wring or empty header");
-        }else {
-            // teraz usuwa teko Bearer ze spacją
-           String headerToken = header.substring(7);
-           Claims claims = (Claims) Jwts.parser().setSigningKey("password").parseClaimsJws(headerToken).getBody();
+        if (httpServletRequest == null || !header.startsWith("Bearer ")) {
+            throw new ServerException("Wrong or empty header");
+        } else {
+            try {
+                // teraz usuwa teko Bearer ze spacją
+                String headerToken = header.substring(7);
+                Claims claims = (Claims) Jwts.parser().setSigningKey("password").parseClaimsJws(headerToken).getBody();
+                servletRequest.setAttribute("claims", claims);
+            }catch (Exception e){
+                throw new ServerException("Wrong key");
+            }
         }
+
+        filterChain.doFilter(servletRequest, servletResponse);
     }
 }
